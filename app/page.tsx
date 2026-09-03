@@ -1,11 +1,14 @@
 "use client";
 
-import { Maximize, Minimize } from "lucide-react";
+import { Maximize, Minimize, FolderKanban } from "lucide-react";
 import { useEffect, useState } from "react";
+import KanbanBoard from "./components/KanbanBoard";
 
 export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showKanbanTooltip, setShowKanbanTooltip] = useState(false);
+  const [showKanban, setShowKanban] = useState(false);
 
   useEffect(() => {
     const handleChange = () => {
@@ -38,7 +41,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-black">
+    <div className="relative min-h-screen w-full bg-black" style={{ backgroundImage: "url('/lofi-room-cover.png')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
       <style>{`
         @keyframes tooltip-in {
           from {
@@ -67,6 +70,7 @@ export default function Home() {
             boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
           }}
         >
+          {/* Fullscreen button */}
           <div className="relative">
             <button
               onClick={toggleFullscreen}
@@ -91,8 +95,35 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* Kanban button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowKanban(true)}
+              onMouseEnter={() => setShowKanbanTooltip(true)}
+              onMouseLeave={() => setShowKanbanTooltip(false)}
+              className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+            >
+              <FolderKanban size={18} />
+            </button>
+
+            {showKanbanTooltip && (
+              <div
+                className="tooltip-animate absolute right-full top-1/2 mr-3 px-2.5 py-1.5 rounded-lg text-xs text-white whitespace-nowrap pointer-events-none"
+                style={{
+                  background: "rgba(30, 30, 30, 0.95)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
+                }}
+              >
+                Board de tarefas
+              </div>
+            )}
+          </div>
         </div>
       </aside>
+
+      {showKanban && <KanbanBoard onClose={() => setShowKanban(false)} />}
     </div>
   );
 }
