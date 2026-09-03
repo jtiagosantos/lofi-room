@@ -1,14 +1,17 @@
 "use client";
 
-import { Maximize, Minimize, FolderKanban } from "lucide-react";
+import { Maximize, Minimize, FolderKanban, NotebookPen } from "lucide-react";
 import { useEffect, useState } from "react";
 import KanbanBoard from "./components/KanbanBoard";
+import NotesBlock from "./components/NotesBlock";
 
 export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showKanbanTooltip, setShowKanbanTooltip] = useState(false);
   const [showKanban, setShowKanban] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [showNotesTooltip, setShowNotesTooltip] = useState(false);
 
   useEffect(() => {
     const handleChange = () => {
@@ -120,10 +123,36 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* Notes button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotes(true)}
+              onMouseEnter={() => setShowNotesTooltip(true)}
+              onMouseLeave={() => setShowNotesTooltip(false)}
+              className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+            >
+              <NotebookPen size={18} />
+            </button>
+
+            {showNotesTooltip && (
+              <div
+                className="tooltip-animate absolute right-full top-1/2 mr-3 px-2.5 py-1.5 rounded-lg text-xs text-white whitespace-nowrap pointer-events-none"
+                style={{
+                  background: "rgba(30, 30, 30, 0.95)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
+                }}
+              >
+                Bloco de anotações
+              </div>
+            )}
+          </div>
         </div>
       </aside>
 
       {showKanban && <KanbanBoard onClose={() => setShowKanban(false)} />}
+      {showNotes && <NotesBlock onClose={() => setShowNotes(false)} />}
     </div>
   );
 }
