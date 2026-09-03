@@ -99,7 +99,7 @@ export default function QuickLinks({ onClose }: Props) {
   }
 
   return (
-    <>
+    <div style={{ display: "contents" }}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-40"
@@ -124,20 +124,6 @@ export default function QuickLinks({ onClose }: Props) {
           boxShadow: "0 8px 40px rgba(0,0,0,0.6)",
         }}
       >
-        <style>{`
-          @keyframes quicklinks-in {
-            from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
-            to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-          }
-          .quicklinks-enter {
-            animation: quicklinks-in 0.2s ease-out forwards;
-          }
-          .links-scroll::-webkit-scrollbar { width: 4px; }
-          .links-scroll::-webkit-scrollbar-track { background: transparent; }
-          .links-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-          .link-item:hover .link-actions { opacity: 1; }
-        `}</style>
-
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4 flex-shrink-0"
@@ -290,6 +276,6 @@ export default function QuickLinks({ onClose }: Props) {
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

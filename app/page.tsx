@@ -7,6 +7,7 @@ import NotesBlock from "./components/NotesBlock";
 import WeatherBlock from "./components/WeatherBlock";
 import ClockBlock from "./components/ClockBlock";
 import QuickLinks from "./components/QuickLinks";
+import MusicPlayer from "./components/MusicPlayer";
 
 export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -50,22 +51,6 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen w-full bg-black" style={{ backgroundImage: "url('/lofi-room-cover.png')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
-      <style>{`
-        @keyframes tooltip-in {
-          from {
-            opacity: 0;
-            transform: translateY(-50%) translateX(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(-50%) translateX(0);
-          }
-        }
-        .tooltip-animate {
-          animation: tooltip-in 0.15s ease-out forwards;
-        }
-      `}</style>
-
       {/* Title - canto superior esquerdo */}
       <div className="fixed top-4 left-4 z-50">
         <h1 className="text-white" style={{ fontFamily: "var(--font-pacifico)", fontSize: "28px" }}>
@@ -243,6 +228,7 @@ export default function Home() {
       {activePanel === "notes" && <NotesBlock onClose={() => setActivePanel(null)} />}
       {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} />}
       {activePanel === "links" && <QuickLinks onClose={() => setActivePanel(null)} />}
+      <MusicPlayer />
     </div>
   );
 }

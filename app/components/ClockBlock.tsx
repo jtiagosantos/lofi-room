@@ -23,17 +23,7 @@ export default function ClockBlock() {
   const year = now.getFullYear();
 
   return (
-    <>
-      <style>{`
-        @keyframes clock-text-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .clock-text-enter {
-          animation: clock-text-in 0.2s ease-out forwards;
-        }
-      `}</style>
-
+    <div style={{ display: "contents" }}>
       <div className="clock-text-enter fixed inset-0 z-40 flex flex-col items-center justify-center gap-2 pointer-events-none">
         {/* Time */}
         <div className="flex items-end gap-2">
@@ -59,6 +49,6 @@ export default function ClockBlock() {
           {weekDay}, {day} de {month} de {year}
         </span>
       </div>
-    </>
+    </div>
   );
 }

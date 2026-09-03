@@ -151,7 +151,7 @@ export default function KanbanBoard({ onClose }: Props) {
   }
 
   return (
-    <>
+    <div style={{ display: "contents" }}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-40"
@@ -176,23 +176,6 @@ export default function KanbanBoard({ onClose }: Props) {
           boxShadow: "0 8px 40px rgba(0,0,0,0.6)",
         }}
       >
-        <style>{`
-          @keyframes kanban-in {
-            from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
-            to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-          }
-          .kanban-enter {
-            animation: kanban-in 0.2s ease-out forwards;
-          }
-          .task-card:hover .task-actions { opacity: 1; }
-          .col-scroll::-webkit-scrollbar { width: 4px; }
-          .col-scroll::-webkit-scrollbar-track { background: transparent; }
-          .col-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-          .board-scroll::-webkit-scrollbar { height: 6px; }
-          .board-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
-          .board-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-        `}</style>
-
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4 flex-shrink-0"
@@ -434,6 +417,6 @@ export default function KanbanBoard({ onClose }: Props) {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

@@ -76,7 +76,7 @@ export default function NotesBlock({ onClose }: Props) {
   }
 
   return (
-    <>
+    <div style={{ display: "contents" }}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-40"
@@ -101,23 +101,6 @@ export default function NotesBlock({ onClose }: Props) {
           boxShadow: "0 8px 40px rgba(0,0,0,0.6)",
         }}
       >
-        <style>{`
-          @keyframes notes-in {
-            from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
-            to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-          }
-          .notes-enter {
-            animation: notes-in 0.2s ease-out forwards;
-          }
-          .note-item:hover .note-actions { opacity: 1; }
-          .notes-scroll::-webkit-scrollbar { width: 4px; }
-          .notes-scroll::-webkit-scrollbar-track { background: transparent; }
-          .notes-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-          .notes-textarea::-webkit-scrollbar { width: 4px; }
-          .notes-textarea::-webkit-scrollbar-track { background: transparent; }
-          .notes-textarea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-        `}</style>
-
         {/* Header */}
         <div
           className="flex items-center justify-between px-5 py-4 flex-shrink-0"
@@ -295,6 +278,6 @@ export default function NotesBlock({ onClose }: Props) {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
