@@ -1,20 +1,22 @@
 "use client";
 
-import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff } from "lucide-react";
+import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link } from "lucide-react";
 import { useEffect, useState } from "react";
 import KanbanBoard from "./components/KanbanBoard";
 import NotesBlock from "./components/NotesBlock";
 import WeatherBlock from "./components/WeatherBlock";
 import ClockBlock from "./components/ClockBlock";
+import QuickLinks from "./components/QuickLinks";
 
 export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showKanbanTooltip, setShowKanbanTooltip] = useState(false);
   const [showNotesTooltip, setShowNotesTooltip] = useState(false);
-  const [activePanel, setActivePanel] = useState<"clock" | "kanban" | "notes" | "weather" | null>(null);
+  const [activePanel, setActivePanel] = useState<"clock" | "kanban" | "notes" | "weather" | "links" | null>(null);
   const [showClockTooltip, setShowClockTooltip] = useState(false);
   const [showWeatherTooltip, setShowWeatherTooltip] = useState(false);
+  const [showLinksTooltip, setShowLinksTooltip] = useState(false);
 
   useEffect(() => {
     const handleChange = () => {
@@ -208,6 +210,31 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* Links button */}
+          <div className="relative">
+            <button
+              onClick={() => setActivePanel("links")}
+              onMouseEnter={() => setShowLinksTooltip(true)}
+              onMouseLeave={() => setShowLinksTooltip(false)}
+              className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+            >
+              <Link size={18} />
+            </button>
+
+            {showLinksTooltip && (
+              <div
+                className="tooltip-animate absolute right-full top-1/2 mr-3 px-2.5 py-1.5 rounded-lg text-xs text-white whitespace-nowrap pointer-events-none"
+                style={{
+                  background: "rgba(30, 30, 30, 0.95)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
+                }}
+              >
+                Links rápidos
+              </div>
+            )}
+          </div>
         </div>
       </aside>
 
@@ -215,6 +242,7 @@ export default function Home() {
       {activePanel === "kanban" && <KanbanBoard onClose={() => setActivePanel(null)} />}
       {activePanel === "notes" && <NotesBlock onClose={() => setActivePanel(null)} />}
       {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} />}
+      {activePanel === "links" && <QuickLinks onClose={() => setActivePanel(null)} />}
     </div>
   );
 }
