@@ -11,18 +11,19 @@ type Station = {
 
 const STATIONS: Station[] = [
   { id: "rFZHOHl-L8A", title: "Lofi Hip Hop Radio", channel: "Lofi Girl" },
-  { id: "jfKfPfyJRdk", title: "Beats to Relax/Study To", channel: "Lofi Girl" },
-  { id: "n61ULEU7CO0", title: "Best of Lofi Hip Hop 2021", channel: "Lofi Girl" },
-  { id: "7NOSDKb0HlU", title: "Beats to Study/Relax To", channel: "Chillhop Music" },
-  { id: "5yx6BWlEVcY", title: "Jazzy & Lofi Hip Hop Beats", channel: "Chillhop Music" },
-  { id: "OFsJen4j9VY", title: "Purrple Cat Radio", channel: "Purrple Cat" },
-  { id: "vrB9wC6quaU", title: "Rainy Lofi Vibes for a Calm Night", channel: "Lofi on the Rooftop" },
-  { id: "4Q9jq-tdOoE", title: "Peaceful Lofi Coffee in 90's Tokyo", channel: "Lofi on the Rooftop" },
-  { id: "kLZ4plrttPI", title: "Coffee Beach - Lofi Healing", channel: "Healing Me" },
-  { id: "OOCeWZm5c8U", title: "Smooth Beats to Relax/Study [2018]", channel: "nourish." },
-  { id: "WelpRyoV0UY", title: "Lofi Hip Hop Mix", channel: "Lofi Radio" },
-  { id: "wA0C0uRxSaE", title: "Chill Lofi Beats", channel: "Lofi Radio" },
-  { id: "q0BVR5jRXxE", title: "Lofi Chill Vibes", channel: "Lofi Radio" },
+  { id: "YqU0N7N9JSs", title: "Nintendo LoFi 24/7 Radio", channel: "Studio Lo-Fi" },
+  { id: "DsBdp-x13UM", title: "Lo-files", channel: "Bring Me The Horizon" },
+  { id: "E2vONfzoyRI", title: "Jazz Lofi Radio", channel: "Lofi Girl" },
+  { id: "4xDzrJKXOOY", title: "Synthwave Radio", channel: "Lofi Girl" },
+  { id: "5yx6BWlEVcY", title: "Chillhop Radio", channel: "Chillhop Music" },
+  { id: "9p3Uxmrm3Xk", title: "office shrimp.", channel: "mocha." },
+  { id: "aLLNDD7xQa8", title: "groovy duck.", channel: "mocha." },
+  { id: "PQmO2TI0CJc", title: "float easy.", channel: "mocha." },
+  { id: "lrt1ZQaSqTU", title: "windy puppy.", channel: "mocha." },
+  { id: "vYIYIVmOo3Q", title: "Calming Lofi Rain", channel: "Lofi Tone Art" },
+  { id: "TD-cnYc6fPw", title: "90's Rainy Night Vibes", channel: "Retro Lofi Dreams" },
+  { id: "92PvEVG0sKI", title: "Lofi Beats", channel: "Lofi Radio" },
+  { id: "4qchi6n_Mb0", title: "Lofi Chill Vibes", channel: "Lofi Radio" },
 ];
 
 function buildSrc(videoId: string) {
