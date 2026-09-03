@@ -1,7 +1,8 @@
 "use client";
 
-import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link, Scissors, Calculator as CalculatorIcon, Newspaper } from "lucide-react";
+import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link, Scissors, Calculator as CalculatorIcon, Newspaper, UserCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import KanbanBoard from "./components/KanbanBoard";
 import NotesBlock from "./components/NotesBlock";
 import WeatherBlock from "./components/WeatherBlock";
@@ -11,19 +12,39 @@ import MusicPlayer from "./components/MusicPlayer";
 import CalculatorBlock from "./components/Calculator";
 import UrlShortener from "./components/UrlShortener";
 import TechFeed from "./components/TechFeed";
+import LoginScreen from "./components/LoginScreen";
+import UserProfile from "./components/UserProfile";
 
 export default function Home() {
+  const { data: session } = useSession();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showKanbanTooltip, setShowKanbanTooltip] = useState(false);
   const [showNotesTooltip, setShowNotesTooltip] = useState(false);
-  const [activePanel, setActivePanel] = useState<"clock" | "kanban" | "notes" | "weather" | "links" | "urlshort" | "calc" | "feed" | null>(null);
+  const [activePanel, setActivePanel] = useState<"clock" | "kanban" | "notes" | "weather" | "links" | "urlshort" | "calc" | "feed" | "profile" | null>(null);
   const [showUrlShortTooltip, setShowUrlShortTooltip] = useState(false);
   const [showCalcTooltip, setShowCalcTooltip] = useState(false);
   const [showFeedTooltip, setShowFeedTooltip] = useState(false);
   const [showClockTooltip, setShowClockTooltip] = useState(false);
   const [showWeatherTooltip, setShowWeatherTooltip] = useState(false);
   const [showLinksTooltip, setShowLinksTooltip] = useState(false);
+  const [showProfileTooltip, setShowProfileTooltip] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+
+  const isLoggedIn = !!session?.user;
+
+  function openPanel(panel: typeof activePanel) {
+    if (panel === "clock") {
+      // clock toggle doesn't require auth
+      setActivePanel(activePanel === "clock" ? null : "clock");
+      return;
+    }
+    if (!isLoggedIn) {
+      setShowLogin(true);
+      return;
+    }
+    setActivePanel(panel);
+  }
 
   useEffect(() => {
     const handleChange = () => {
@@ -80,7 +101,7 @@ export default function Home() {
           <div className="flex flex-col items-center justify-end gap-1">
             <div className="relative">
               <button
-                onClick={() => setActivePanel("urlshort")}
+                onClick={() => openPanel("urlshort")}
                 onMouseEnter={() => setShowUrlShortTooltip(true)}
                 onMouseLeave={() => setShowUrlShortTooltip(false)}
                 className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -135,7 +156,7 @@ export default function Home() {
           {/* Clock button */}
           <div className="relative">
             <button
-              onClick={() => setActivePanel(activePanel === "clock" ? null : "clock")}
+              onClick={() => openPanel("clock")}
               onMouseEnter={() => setShowClockTooltip(true)}
               onMouseLeave={() => setShowClockTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -160,7 +181,7 @@ export default function Home() {
           {/* Tech Feed button */}
           <div className="relative">
             <button
-              onClick={() => setActivePanel("feed")}
+              onClick={() => openPanel("feed")}
               onMouseEnter={() => setShowFeedTooltip(true)}
               onMouseLeave={() => setShowFeedTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -185,7 +206,7 @@ export default function Home() {
           {/* Kanban button */}
           <div className="relative">
             <button
-              onClick={() => setActivePanel("kanban")}
+              onClick={() => openPanel("kanban")}
               onMouseEnter={() => setShowKanbanTooltip(true)}
               onMouseLeave={() => setShowKanbanTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -210,7 +231,7 @@ export default function Home() {
           {/* Notes button */}
           <div className="relative">
             <button
-              onClick={() => setActivePanel("notes")}
+              onClick={() => openPanel("notes")}
               onMouseEnter={() => setShowNotesTooltip(true)}
               onMouseLeave={() => setShowNotesTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -235,7 +256,7 @@ export default function Home() {
           {/* Weather button */}
           <div className="relative">
             <button
-              onClick={() => setActivePanel("weather")}
+              onClick={() => openPanel("weather")}
               onMouseEnter={() => setShowWeatherTooltip(true)}
               onMouseLeave={() => setShowWeatherTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -260,7 +281,7 @@ export default function Home() {
           {/* Links button */}
           <div className="relative">
             <button
-              onClick={() => setActivePanel("links")}
+              onClick={() => openPanel("links")}
               onMouseEnter={() => setShowLinksTooltip(true)}
               onMouseLeave={() => setShowLinksTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -285,7 +306,7 @@ export default function Home() {
           {/* Calculator button */}
           <div className="relative">
             <button
-              onClick={() => setActivePanel("calc")}
+              onClick={() => openPanel("calc")}
               onMouseEnter={() => setShowCalcTooltip(true)}
               onMouseLeave={() => setShowCalcTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -305,6 +326,41 @@ export default function Home() {
                 Calculadora
               </div>
             )}
+          {/* User profile button */}
+          {isLoggedIn && (
+            <div className="relative">
+              <button
+                onClick={() => openPanel("profile")}
+                onMouseEnter={() => setShowProfileTooltip(true)}
+                onMouseLeave={() => setShowProfileTooltip(false)}
+                className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer overflow-hidden"
+              >
+                {session?.user?.image ? (
+                  <img
+                    src={session.user.image}
+                    alt=""
+                    className="w-6 h-6 rounded-full"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <UserCircle size={19} />
+                )}
+              </button>
+
+              {showProfileTooltip && (
+                <div
+                  className="tooltip-animate absolute right-full top-1/2 mr-3 px-2.5 py-1.5 rounded-lg text-xs text-white whitespace-nowrap pointer-events-none"
+                  style={{
+                    background: "rgba(30, 30, 30, 0.95)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
+                  }}
+                >
+                  Perfil
+                </div>
+              )}
+            </div>
+          )}
           </div>
           </div>
         </div>
@@ -318,6 +374,8 @@ export default function Home() {
       {activePanel === "urlshort" && <UrlShortener onClose={() => setActivePanel(null)} />}
       {activePanel === "calc" && <CalculatorBlock onClose={() => setActivePanel(null)} />}
       {activePanel === "feed" && <TechFeed onClose={() => setActivePanel(null)} />}
+      {activePanel === "profile" && <UserProfile onClose={() => setActivePanel(null)} />}
+      {showLogin && <LoginScreen onClose={() => setShowLogin(false)} />}
       <MusicPlayer />
     </div>
   );

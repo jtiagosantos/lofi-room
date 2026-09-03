@@ -26,12 +26,12 @@ const STATIONS: Station[] = [
   { id: "4qchi6n_Mb0", title: "Lofi Chill Vibes", channel: "Lofi Radio" },
 ];
 
-function buildSrc(videoId: string) {
-  return `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0`;
+function buildSrc(videoId: string, startMuted = true) {
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&modestbranding=1&rel=0${startMuted ? "&mute=1" : ""}`;
 }
 
 export default function MusicPlayer() {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const playlistRef = useRef<HTMLDivElement>(null);
   const activeItemRef = useRef<HTMLButtonElement>(null);
   const [playing, setPlaying] = useState(true);
@@ -40,7 +40,32 @@ export default function MusicPlayer() {
   const [waitingUnmute, setWaitingUnmute] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPlaylist, setShowPlaylist] = useState(false);
+  const waitingUnmuteRef = useRef(true);
+  const volumeRef = useRef(50);
   const current = STATIONS[currentIndex];
+
+  // Keep refs in sync
+  waitingUnmuteRef.current = waitingUnmute;
+  volumeRef.current = volume;
+
+  // Create iframe imperatively, outside React rendering
+  useEffect(() => {
+    let iframe = document.getElementById("yt-lofi-iframe") as HTMLIFrameElement | null;
+    if (!iframe) {
+      iframe = document.createElement("iframe");
+      iframe.id = "yt-lofi-iframe";
+      iframe.allow = "autoplay";
+      iframe.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;bottom:0;left:0;border:none;";
+      iframe.src = buildSrc(STATIONS[0].id, true);
+      iframe.onload = () => {
+        setTimeout(() => {
+          postCommandToIframe(iframe!, "playVideo");
+        }, 500);
+      };
+      document.body.appendChild(iframe);
+    }
+    iframeRef.current = iframe;
+  }, []);
 
   useEffect(() => {
     if (showPlaylist && activeItemRef.current) {
@@ -48,11 +73,16 @@ export default function MusicPlayer() {
     }
   }, [showPlaylist]);
 
-  const postCommand = useCallback((func: string, args?: unknown) => {
-    iframeRef.current?.contentWindow?.postMessage(
+  function postCommandToIframe(iframe: HTMLIFrameElement, func: string, args?: unknown) {
+    iframe.contentWindow?.postMessage(
       JSON.stringify({ event: "command", func, args: args ? [args] : [] }),
       "*"
     );
+  }
+
+  const postCommand = useCallback((func: string, args?: unknown) => {
+    if (!iframeRef.current) return;
+    postCommandToIframe(iframeRef.current, func, args);
   }, []);
 
   function activateSound() {
@@ -98,30 +128,25 @@ export default function MusicPlayer() {
     if (index === currentIndex) return;
     setCurrentIndex(index);
     setPlaying(true);
+
+    // Swap iframe src imperatively
+    const iframe = iframeRef.current;
+    if (iframe) {
+      iframe.src = buildSrc(STATIONS[index].id, waitingUnmuteRef.current);
+      iframe.onload = () => {
+        setTimeout(() => {
+          if (!waitingUnmuteRef.current) {
+            postCommandToIframe(iframe, "unMute");
+            postCommandToIframe(iframe, "setVolume", volumeRef.current);
+          }
+          postCommandToIframe(iframe, "playVideo");
+        }, 500);
+      };
+    }
   }
 
   return (
     <div style={{ display: "contents" }}>
-      {/* Hidden YouTube iframe */}
-      <iframe
-        ref={iframeRef}
-        key={STATIONS[currentIndex].id + currentIndex}
-        src={buildSrc(STATIONS[currentIndex].id)}
-        allow="autoplay"
-        style={{ position: "fixed", width: 1, height: 1, opacity: 0, pointerEvents: "none", bottom: 0, left: 0, border: "none" }}
-        onLoad={() => {
-          setTimeout(() => {
-            if (waitingUnmute) {
-              postCommand("mute");
-            } else {
-              postCommand("unMute");
-              postCommand("setVolume", volume);
-            }
-            postCommand("playVideo");
-          }, 500);
-        }}
-      />
-
       {/* Playlist panel */}
       {showPlaylist && (
         <div
@@ -192,7 +217,6 @@ export default function MusicPlayer() {
         }}
       >
         {waitingUnmute ? (
-          /* Waiting for user interaction to unmute */
           <button
             onClick={activateSound}
             className="flex items-center gap-3 cursor-pointer w-full"
@@ -201,7 +225,6 @@ export default function MusicPlayer() {
             <span className="text-white/70 text-xs">Clique para ativar o som</span>
           </button>
         ) : (
-          /* Normal player controls */
           <>
             <button
               onClick={() => setShowPlaylist((v) => !v)}

@@ -134,6 +134,24 @@ body {
 .feed-scroll::-webkit-scrollbar-track { background: transparent; }
 .feed-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
 
+/* User Profile */
+@keyframes profile-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.profile-enter {
+  animation: profile-in 0.2s ease-out forwards;
+}
+
+/* Login Screen */
+@keyframes login-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.login-enter {
+  animation: login-in 0.2s ease-out forwards;
+}
+
 /* URL Shortener */
 @keyframes urlshort-in {
   from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
