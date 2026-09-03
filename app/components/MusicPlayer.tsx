@@ -197,7 +197,7 @@ export default function MusicPlayer() {
             onClick={activateSound}
             className="flex items-center gap-3 cursor-pointer w-full"
           >
-            <Volume2 size={18} className="text-white/60 flex-shrink-0 animate-pulse" />
+            <Volume2 size={19} className="text-white/60 flex-shrink-0 animate-pulse" />
             <span className="text-white/70 text-xs">Clique para ativar o som</span>
           </button>
         ) : (
@@ -209,7 +209,7 @@ export default function MusicPlayer() {
             >
               <span className="text-white/85 text-xs font-medium group-hover:text-white transition-colors flex items-center gap-1 w-full">
                 <span className="truncate">{current.title}</span>
-                <ChevronDown size={11} className="text-white/40 flex-shrink-0" />
+                <ChevronDown size={12} className="text-white/40 flex-shrink-0" />
               </span>
               <div className="flex items-center gap-1.5">
                 <span
@@ -229,7 +229,7 @@ export default function MusicPlayer() {
               onClick={togglePlay}
               className="flex items-center justify-center w-8 h-8 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
-              {playing ? <Pause size={16} /> : <Play size={16} />}
+              {playing ? <Pause size={17} /> : <Play size={17} />}
             </button>
 
             <div className="flex items-center gap-2">
@@ -237,7 +237,7 @@ export default function MusicPlayer() {
                 onClick={toggleMute}
                 className="text-white/50 hover:text-white transition-colors cursor-pointer"
               >
-                {muted || volume === 0 ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                {muted || volume === 0 ? <VolumeX size={16} /> : <Volume2 size={16} />}
               </button>
               <input
                 type="range"
@@ -253,7 +253,7 @@ export default function MusicPlayer() {
               onClick={() => setShowPlaylist((v) => !v)}
               className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors cursor-pointer ${showPlaylist ? "text-white bg-white/10" : "text-white/40 hover:text-white hover:bg-white/10"}`}
             >
-              <ListMusic size={14} />
+              <ListMusic size={15} />
             </button>
           </>
         )}
