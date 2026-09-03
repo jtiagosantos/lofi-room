@@ -1,17 +1,18 @@
 "use client";
 
-import { Maximize, Minimize, FolderKanban, NotebookPen } from "lucide-react";
+import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer } from "lucide-react";
 import { useEffect, useState } from "react";
 import KanbanBoard from "./components/KanbanBoard";
 import NotesBlock from "./components/NotesBlock";
+import WeatherBlock from "./components/WeatherBlock";
 
 export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showKanbanTooltip, setShowKanbanTooltip] = useState(false);
-  const [showKanban, setShowKanban] = useState(false);
-  const [showNotes, setShowNotes] = useState(false);
   const [showNotesTooltip, setShowNotesTooltip] = useState(false);
+  const [activePanel, setActivePanel] = useState<"kanban" | "notes" | "weather" | null>(null);
+  const [showWeatherTooltip, setShowWeatherTooltip] = useState(false);
 
   useEffect(() => {
     const handleChange = () => {
@@ -61,6 +62,13 @@ export default function Home() {
         }
       `}</style>
 
+      {/* Title - canto superior esquerdo */}
+      <div className="fixed top-4 left-4 z-50">
+        <h1 className="text-white" style={{ fontFamily: "var(--font-pacifico)", fontSize: "28px" }}>
+          Lofi Room
+        </h1>
+      </div>
+
       {/* Sidebar - canto superior direito com espaçamento das bordas */}
       <aside className="fixed top-4 right-4 z-50">
         <div
@@ -102,7 +110,7 @@ export default function Home() {
           {/* Kanban button */}
           <div className="relative">
             <button
-              onClick={() => setShowKanban(true)}
+              onClick={() => setActivePanel("kanban")}
               onMouseEnter={() => setShowKanbanTooltip(true)}
               onMouseLeave={() => setShowKanbanTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -127,7 +135,7 @@ export default function Home() {
           {/* Notes button */}
           <div className="relative">
             <button
-              onClick={() => setShowNotes(true)}
+              onClick={() => setActivePanel("notes")}
               onMouseEnter={() => setShowNotesTooltip(true)}
               onMouseLeave={() => setShowNotesTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
@@ -148,11 +156,37 @@ export default function Home() {
               </div>
             )}
           </div>
+
+          {/* Weather button */}
+          <div className="relative">
+            <button
+              onClick={() => setActivePanel("weather")}
+              onMouseEnter={() => setShowWeatherTooltip(true)}
+              onMouseLeave={() => setShowWeatherTooltip(false)}
+              className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+            >
+              <Thermometer size={18} />
+            </button>
+
+            {showWeatherTooltip && (
+              <div
+                className="tooltip-animate absolute right-full top-1/2 mr-3 px-2.5 py-1.5 rounded-lg text-xs text-white whitespace-nowrap pointer-events-none"
+                style={{
+                  background: "rgba(30, 30, 30, 0.95)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
+                }}
+              >
+                Clima
+              </div>
+            )}
+          </div>
         </div>
       </aside>
 
-      {showKanban && <KanbanBoard onClose={() => setShowKanban(false)} />}
-      {showNotes && <NotesBlock onClose={() => setShowNotes(false)} />}
+      {activePanel === "kanban" && <KanbanBoard onClose={() => setActivePanel(null)} />}
+      {activePanel === "notes" && <NotesBlock onClose={() => setActivePanel(null)} />}
+      {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} />}
     </div>
   );
 }
