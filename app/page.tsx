@@ -85,7 +85,7 @@ export default function Home() {
                 onMouseLeave={() => setShowUrlShortTooltip(false)}
                 className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
               >
-                <Scissors size={18} />
+                <Scissors size={19} />
               </button>
 
               {showUrlShortTooltip && (
@@ -115,7 +115,7 @@ export default function Home() {
               data-tooltip-anchor="fullscreen"
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
             >
-              {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              {isFullscreen ? <Minimize size={19} /> : <Maximize size={19} />}
             </button>
 
             {showTooltip && (
@@ -140,7 +140,7 @@ export default function Home() {
               onMouseLeave={() => setShowClockTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
             >
-              {activePanel === "clock" ? <AlarmClockOff size={18} /> : <Clock size={18} />}
+              {activePanel === "clock" ? <AlarmClockOff size={19} /> : <Clock size={19} />}
             </button>
 
             {showClockTooltip && (
@@ -165,7 +165,7 @@ export default function Home() {
               onMouseLeave={() => setShowFeedTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
             >
-              <Newspaper size={18} />
+              <Newspaper size={19} />
             </button>
 
             {showFeedTooltip && (
@@ -190,7 +190,7 @@ export default function Home() {
               onMouseLeave={() => setShowKanbanTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
             >
-              <FolderKanban size={18} />
+              <FolderKanban size={19} />
             </button>
 
             {showKanbanTooltip && (
@@ -215,7 +215,7 @@ export default function Home() {
               onMouseLeave={() => setShowNotesTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
             >
-              <NotebookPen size={18} />
+              <NotebookPen size={19} />
             </button>
 
             {showNotesTooltip && (
@@ -240,7 +240,7 @@ export default function Home() {
               onMouseLeave={() => setShowWeatherTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
             >
-              <Thermometer size={18} />
+              <Thermometer size={19} />
             </button>
 
             {showWeatherTooltip && (
@@ -265,7 +265,7 @@ export default function Home() {
               onMouseLeave={() => setShowLinksTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
             >
-              <Link size={18} />
+              <Link size={19} />
             </button>
 
             {showLinksTooltip && (
@@ -290,7 +290,7 @@ export default function Home() {
               onMouseLeave={() => setShowCalcTooltip(false)}
               className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
             >
-              <CalculatorIcon size={18} />
+              <CalculatorIcon size={19} />
             </button>
 
             {showCalcTooltip && (
