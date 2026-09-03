@@ -1,6 +1,6 @@
 "use client";
 
-import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link, Calculator as CalculatorIcon } from "lucide-react";
+import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link, Calculator as CalculatorIcon, Newspaper } from "lucide-react";
 import { useEffect, useState } from "react";
 import KanbanBoard from "./components/KanbanBoard";
 import NotesBlock from "./components/NotesBlock";
@@ -9,14 +9,16 @@ import ClockBlock from "./components/ClockBlock";
 import QuickLinks from "./components/QuickLinks";
 import MusicPlayer from "./components/MusicPlayer";
 import CalculatorBlock from "./components/Calculator";
+import TechFeed from "./components/TechFeed";
 
 export default function Home() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showKanbanTooltip, setShowKanbanTooltip] = useState(false);
   const [showNotesTooltip, setShowNotesTooltip] = useState(false);
-  const [activePanel, setActivePanel] = useState<"clock" | "kanban" | "notes" | "weather" | "links" | "calc" | null>(null);
+  const [activePanel, setActivePanel] = useState<"clock" | "kanban" | "notes" | "weather" | "links" | "calc" | "feed" | null>(null);
   const [showCalcTooltip, setShowCalcTooltip] = useState(false);
+  const [showFeedTooltip, setShowFeedTooltip] = useState(false);
   const [showClockTooltip, setShowClockTooltip] = useState(false);
   const [showWeatherTooltip, setShowWeatherTooltip] = useState(false);
   const [showLinksTooltip, setShowLinksTooltip] = useState(false);
@@ -119,6 +121,31 @@ export default function Home() {
                 }}
               >
                 Relógio
+              </div>
+            )}
+          </div>
+
+          {/* Tech Feed button */}
+          <div className="relative">
+            <button
+              onClick={() => setActivePanel("feed")}
+              onMouseEnter={() => setShowFeedTooltip(true)}
+              onMouseLeave={() => setShowFeedTooltip(false)}
+              className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+            >
+              <Newspaper size={18} />
+            </button>
+
+            {showFeedTooltip && (
+              <div
+                className="tooltip-animate absolute right-full top-1/2 mr-3 px-2.5 py-1.5 rounded-lg text-xs text-white whitespace-nowrap pointer-events-none"
+                style={{
+                  background: "rgba(30, 30, 30, 0.95)",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
+                }}
+              >
+                Tech Feed
               </div>
             )}
           </div>
@@ -256,6 +283,7 @@ export default function Home() {
       {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} />}
       {activePanel === "links" && <QuickLinks onClose={() => setActivePanel(null)} />}
       {activePanel === "calc" && <CalculatorBlock onClose={() => setActivePanel(null)} />}
+      {activePanel === "feed" && <TechFeed onClose={() => setActivePanel(null)} />}
       <MusicPlayer />
     </div>
   );
