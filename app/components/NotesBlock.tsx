@@ -1,32 +1,58 @@
 "use client";
 
-import { X, Plus, Trash2, Pencil, Check } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { X, Plus, Trash2, Pencil, Check, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
-type Note = {
-  id: string;
+export type Note = {
+  _id: string;
   title: string;
   content: string;
-  createdAt: Date;
+  createdAt: string;
 };
 
 type Props = {
   onClose: () => void;
+  initialNotes?: Note[] | null;
+  onNotesChange?: (notes: Note[]) => void;
 };
 
-function uid() {
-  return Math.random().toString(36).slice(2, 9);
-}
-
-export default function NotesBlock({ onClose }: Props) {
-  const [notes, setNotes] = useState<Note[]>([]);
+export default function NotesBlock({ onClose, initialNotes, onNotesChange }: Props) {
+  const [notes, setNotes] = useState<Note[]>(initialNotes ?? []);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingTitleId, setEditingTitleId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(!initialNotes);
+  const [saving, setSaving] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const selectedNote = notes.find((n) => n.id === selectedId) ?? null;
+  const selectedNote = notes.find((n) => n._id === selectedId) ?? null;
+
+  // Sincronizar notas com o componente pai
+  useEffect(() => {
+    onNotesChange?.(notes);
+  }, [notes, onNotesChange]);
+
+  // Carregar notas do banco apenas se não foram pré-carregadas
+  useEffect(() => {
+    if (initialNotes) return;
+
+    async function fetchNotes() {
+      try {
+        const res = await fetch("/api/notes");
+        if (res.ok) {
+          const data = await res.json();
+          setNotes(data);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar notas:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchNotes();
+  }, [initialNotes]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -43,36 +69,82 @@ export default function NotesBlock({ onClose }: Props) {
     }
   }, [selectedId]);
 
-  function createNote() {
-    const note: Note = {
-      id: uid(),
-      title: "Nova anotação",
-      content: "",
-      createdAt: new Date(),
-    };
-    setNotes((prev) => [note, ...prev]);
-    setSelectedId(note.id);
+  // Salvar conteúdo com debounce
+  const saveContent = useCallback(async (id: string, content: string) => {
+    setSaving(true);
+    try {
+      await fetch("/api/notes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, content }),
+      });
+    } catch (err) {
+      console.error("Erro ao salvar conteúdo:", err);
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
+  async function createNote() {
+    try {
+      const res = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: "Nova anotação", content: "" }),
+      });
+      if (res.ok) {
+        const note = await res.json();
+        setNotes((prev) => [note, ...prev]);
+        setSelectedId(note._id);
+      }
+    } catch (err) {
+      console.error("Erro ao criar nota:", err);
+    }
   }
 
-  function deleteNote(id: string) {
-    setNotes((prev) => prev.filter((n) => n.id !== id));
-    if (selectedId === id) setSelectedId(null);
+  async function deleteNote(id: string) {
+    try {
+      await fetch("/api/notes", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      setNotes((prev) => prev.filter((n) => n._id !== id));
+      if (selectedId === id) setSelectedId(null);
+    } catch (err) {
+      console.error("Erro ao deletar nota:", err);
+    }
     setConfirmDeleteId(null);
   }
 
   function updateContent(id: string, content: string) {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, content } : n)));
+    setNotes((prev) => prev.map((n) => (n._id === id ? { ...n, content } : n)));
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      saveContent(id, content);
+    }, 500);
   }
 
   function startEditTitle(note: Note) {
-    setEditingTitleId(note.id);
+    setEditingTitleId(note._id);
     setEditingTitle(note.title);
   }
 
-  function saveTitle(id: string) {
+  async function saveTitle(id: string) {
     const title = editingTitle.trim() || "Sem título";
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, title } : n)));
+    setNotes((prev) => prev.map((n) => (n._id === id ? { ...n, title } : n)));
     setEditingTitleId(null);
+
+    try {
+      await fetch("/api/notes", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, title }),
+      });
+    } catch (err) {
+      console.error("Erro ao salvar título:", err);
+    }
   }
 
   return (
@@ -106,7 +178,10 @@ export default function NotesBlock({ onClose }: Props) {
           className="flex items-center justify-between px-5 py-4 flex-shrink-0"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
         >
-          <h2 className="text-white font-semibold text-base tracking-wide">Bloco de anotações</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-white font-semibold text-base tracking-wide">Bloco de anotações</h2>
+            {saving && <Loader2 size={14} className="text-white/30 animate-spin" />}
+          </div>
           <button
             onClick={onClose}
             className="flex items-center justify-center w-7 h-7 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
@@ -139,25 +214,29 @@ export default function NotesBlock({ onClose }: Props) {
 
             {/* List */}
             <div className="notes-scroll flex-1 overflow-y-auto py-2 px-2">
-              {notes.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center mt-6">
+                  <Loader2 size={18} className="text-white/30 animate-spin" />
+                </div>
+              ) : notes.length === 0 ? (
                 <p className="text-white/25 text-xs text-center mt-6 px-4 leading-relaxed">
                   Nenhuma anotação ainda
                 </p>
               ) : (
                 notes.map((note) => (
                   <div
-                    key={note.id}
-                    onClick={() => setSelectedId(note.id)}
+                    key={note._id}
+                    onClick={() => setSelectedId(note._id)}
                     className="note-item group relative flex items-center gap-1 px-3 py-2.5 rounded-xl cursor-pointer transition-colors mb-1"
                     style={{
-                      background: selectedId === note.id ? "rgba(255,255,255,0.1)" : "transparent",
+                      background: selectedId === note._id ? "rgba(255,255,255,0.1)" : "transparent",
                     }}
                     onMouseEnter={(e) => {
-                      if (selectedId !== note.id)
+                      if (selectedId !== note._id)
                         (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)";
                     }}
                     onMouseLeave={(e) => {
-                      if (selectedId !== note.id)
+                      if (selectedId !== note._id)
                         (e.currentTarget as HTMLDivElement).style.background = "transparent";
                     }}
                   >
@@ -165,7 +244,7 @@ export default function NotesBlock({ onClose }: Props) {
                       <span className="flex-1 text-white/80 text-sm truncate">{note.title}</span>
                       <div className="note-actions opacity-0 transition-opacity flex gap-1">
                         <button
-                          onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(note.id); }}
+                          onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(note._id); }}
                           className="text-white/40 hover:text-red-400 cursor-pointer"
                         >
                           <Trash2 size={13} />
@@ -187,7 +266,7 @@ export default function NotesBlock({ onClose }: Props) {
                   className="flex items-center gap-2 px-5 py-3 flex-shrink-0"
                   style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
                 >
-                  {editingTitleId === selectedNote.id ? (
+                  {editingTitleId === selectedNote._id ? (
                     <div className="flex items-center gap-2 flex-1">
                       <input
                         autoFocus
@@ -195,13 +274,13 @@ export default function NotesBlock({ onClose }: Props) {
                         value={editingTitle}
                         onChange={(e) => setEditingTitle(e.target.value)}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") saveTitle(selectedNote.id);
+                          if (e.key === "Enter") saveTitle(selectedNote._id);
                           if (e.key === "Escape") setEditingTitleId(null);
                         }}
-                        onBlur={() => saveTitle(selectedNote.id)}
+                        onBlur={() => saveTitle(selectedNote._id)}
                       />
                       <button
-                        onClick={() => saveTitle(selectedNote.id)}
+                        onClick={() => saveTitle(selectedNote._id)}
                         className="text-white/50 hover:text-white cursor-pointer"
                       >
                         <Check size={16} />
@@ -226,7 +305,7 @@ export default function NotesBlock({ onClose }: Props) {
                   className="notes-textarea flex-1 bg-transparent text-white/80 text-sm leading-relaxed resize-none outline-none px-5 py-4 overflow-y-auto placeholder-white/20"
                   placeholder="Escreva sua anotação..."
                   value={selectedNote.content}
-                  onChange={(e) => updateContent(selectedNote.id, e.target.value)}
+                  onChange={(e) => updateContent(selectedNote._id, e.target.value)}
                 />
               </>
             ) : (

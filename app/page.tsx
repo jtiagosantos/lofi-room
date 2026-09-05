@@ -1,7 +1,7 @@
 "use client";
 
 import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link, Scissors, Calculator as CalculatorIcon, Newspaper, UserCircle } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import KanbanBoard from "./components/KanbanBoard";
 import NotesBlock from "./components/NotesBlock";
@@ -16,12 +16,33 @@ import LoginScreen from "./components/LoginScreen";
 import UserProfile from "./components/UserProfile";
 import LoadingScreen from "./components/LoadingScreen";
 
+type Note = {
+  _id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+};
+
 export default function Home() {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [animationDone, setAnimationDone] = useState(false);
+  const [prefetchedNotes, setPrefetchedNotes] = useState<Note[] | null>(null);
+  const notesFetchedRef = useRef(false);
 
   const sessionReady = status !== "loading";
+  const isLoggedIn = !!session?.user;
+
+  // Prefetch das notas durante o loading
+  useEffect(() => {
+    if (sessionReady && isLoggedIn && !notesFetchedRef.current) {
+      notesFetchedRef.current = true;
+      fetch("/api/notes")
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => setPrefetchedNotes(data))
+        .catch(() => setPrefetchedNotes([]));
+    }
+  }, [sessionReady, isLoggedIn]);
 
   const handleLoadingFinish = useCallback(() => {
     setAnimationDone(true);
@@ -45,8 +66,6 @@ export default function Home() {
   const [showLinksTooltip, setShowLinksTooltip] = useState(false);
   const [showProfileTooltip, setShowProfileTooltip] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-
-  const isLoggedIn = !!session?.user;
 
   function openPanel(panel: typeof activePanel) {
     if (panel === "clock") {
@@ -383,7 +402,7 @@ export default function Home() {
 
       {activePanel === "clock" && <ClockBlock />}
       {activePanel === "kanban" && <KanbanBoard onClose={() => setActivePanel(null)} />}
-      {activePanel === "notes" && <NotesBlock onClose={() => setActivePanel(null)} />}
+      {activePanel === "notes" && <NotesBlock onClose={() => setActivePanel(null)} initialNotes={prefetchedNotes} onNotesChange={setPrefetchedNotes} />}
       {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} />}
       {activePanel === "links" && <QuickLinks onClose={() => setActivePanel(null)} />}
       {activePanel === "urlshort" && <UrlShortener onClose={() => setActivePanel(null)} />}
