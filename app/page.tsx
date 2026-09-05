@@ -1,7 +1,7 @@
 "use client";
 
 import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link, Scissors, Calculator as CalculatorIcon, Newspaper, UserCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import KanbanBoard from "./components/KanbanBoard";
 import NotesBlock from "./components/NotesBlock";
@@ -14,9 +14,24 @@ import UrlShortener from "./components/UrlShortener";
 import TechFeed from "./components/TechFeed";
 import LoginScreen from "./components/LoginScreen";
 import UserProfile from "./components/UserProfile";
+import LoadingScreen from "./components/LoadingScreen";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const [isLoading, setIsLoading] = useState(true);
+  const [animationDone, setAnimationDone] = useState(false);
+
+  const sessionReady = status !== "loading";
+
+  const handleLoadingFinish = useCallback(() => {
+    setAnimationDone(true);
+  }, []);
+
+  useEffect(() => {
+    if (animationDone && sessionReady) {
+      setIsLoading(false);
+    }
+  }, [animationDone, sessionReady]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showKanbanTooltip, setShowKanbanTooltip] = useState(false);
@@ -377,6 +392,7 @@ export default function Home() {
       {activePanel === "profile" && <UserProfile onClose={() => setActivePanel(null)} />}
       {showLogin && <LoginScreen onClose={() => setShowLogin(false)} />}
       <MusicPlayer />
+      {isLoading && <LoadingScreen onFinish={handleLoadingFinish} />}
     </div>
   );
 }

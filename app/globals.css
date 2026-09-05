@@ -172,3 +172,84 @@ body {
 .calc-enter {
   animation: calc-in 0.2s ease-out forwards;
 }
+
+/* Loading Screen - Headphone bob */
+.headphone-bob {
+  animation: headphone-bob 2.5s ease-in-out infinite;
+}
+@keyframes headphone-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(-1.5deg); }
+  75% { transform: translateY(-3px) rotate(1.5deg); }
+}
+
+/* Loading Screen - Music notes floating */
+.music-note {
+  animation: note-float 2.5s ease-in-out infinite;
+}
+.music-note-1 {
+  animation-delay: 0s;
+}
+.music-note-2 {
+  animation-delay: 1.2s;
+}
+@keyframes note-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  20% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) translateX(4px);
+  }
+}
+
+/* Loading Screen - Sound waves */
+.sound-wave {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+  animation: sound-pulse 2.5s ease-out infinite;
+}
+.sound-wave-1 {
+  width: 150px;
+  height: 150px;
+  animation-delay: 0s;
+}
+.sound-wave-2 {
+  width: 150px;
+  height: 150px;
+  animation-delay: 0.8s;
+}
+.sound-wave-3 {
+  width: 150px;
+  height: 150px;
+  animation-delay: 1.6s;
+}
+@keyframes sound-pulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Loading Screen - Dots */
+@keyframes dot-blink {
+  0%, 100% { opacity: 0.05; }
+  50% { opacity: 0.5; }
+}
+.loading-dot {
+  animation: dot-blink 2s ease-in-out infinite;
+}
+
+/* Loading Screen - Progress bar glow */
+.loading-bar-glow {
+  box-shadow: 0 0 8px rgba(255,255,255,0.15);
+}
