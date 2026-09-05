@@ -18,6 +18,8 @@ type WeatherData = {
 
 type Props = {
   onClose: () => void;
+  initialCep?: string | null;
+  onCepChange?: (cep: string) => void;
 };
 
 function getWeatherDescription(code: number): string {
@@ -52,16 +54,16 @@ function formatCep(value: string) {
   return digits;
 }
 
-export default function WeatherBlock({ onClose }: Props) {
+export default function WeatherBlock({ onClose, initialCep, onCepChange }: Props) {
   const [cep, setCep] = useState("");
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
-  // On mount: load saved CEP and auto-fetch
+  // On mount: usar initialCep (do banco) ou fallback para localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = initialCep || localStorage.getItem(STORAGE_KEY);
     if (saved) {
       setCep(formatCep(saved));
       fetchWeatherForCep(saved);
@@ -139,6 +141,15 @@ export default function WeatherBlock({ onClose }: Props) {
       });
 
       localStorage.setItem(STORAGE_KEY, cleanCep);
+      onCepChange?.(cleanCep);
+
+      // Salvar no banco de dados
+      fetch("/api/weathers", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cep: cleanCep }),
+      }).catch((err) => console.error("Erro ao salvar CEP:", err));
+
       setEditing(false);
     } catch {
       setError("Erro ao buscar dados. Tente novamente.");

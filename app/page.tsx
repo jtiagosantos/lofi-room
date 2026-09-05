@@ -28,19 +28,26 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [animationDone, setAnimationDone] = useState(false);
   const [prefetchedNotes, setPrefetchedNotes] = useState<Note[] | null>(null);
-  const notesFetchedRef = useRef(false);
+  const [prefetchedCep, setPrefetchedCep] = useState<string | null>(null);
+  const dataFetchedRef = useRef(false);
 
   const sessionReady = status !== "loading";
   const isLoggedIn = !!session?.user;
 
-  // Prefetch das notas durante o loading
+  // Prefetch das notas e CEP durante o loading
   useEffect(() => {
-    if (sessionReady && isLoggedIn && !notesFetchedRef.current) {
-      notesFetchedRef.current = true;
+    if (sessionReady && isLoggedIn && !dataFetchedRef.current) {
+      dataFetchedRef.current = true;
+
       fetch("/api/notes")
         .then((res) => (res.ok ? res.json() : []))
         .then((data) => setPrefetchedNotes(data))
         .catch(() => setPrefetchedNotes([]));
+
+      fetch("/api/weathers")
+        .then((res) => (res.ok ? res.json() : { cep: null }))
+        .then((data) => setPrefetchedCep(data.cep))
+        .catch(() => setPrefetchedCep(null));
     }
   }, [sessionReady, isLoggedIn]);
 
@@ -403,7 +410,7 @@ export default function Home() {
       {activePanel === "clock" && <ClockBlock />}
       {activePanel === "kanban" && <KanbanBoard onClose={() => setActivePanel(null)} />}
       {activePanel === "notes" && <NotesBlock onClose={() => setActivePanel(null)} initialNotes={prefetchedNotes} onNotesChange={setPrefetchedNotes} />}
-      {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} />}
+      {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} initialCep={prefetchedCep} onCepChange={setPrefetchedCep} />}
       {activePanel === "links" && <QuickLinks onClose={() => setActivePanel(null)} />}
       {activePanel === "urlshort" && <UrlShortener onClose={() => setActivePanel(null)} />}
       {activePanel === "calc" && <CalculatorBlock onClose={() => setActivePanel(null)} />}
