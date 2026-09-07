@@ -18,7 +18,7 @@ const NoteSchema = new Schema<INote>(
   },
   {
     timestamps: true,
-    collection: "notes",
+    collection: "block-notes",
   }
 );
 
