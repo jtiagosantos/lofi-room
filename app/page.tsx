@@ -23,18 +23,26 @@ type Note = {
   createdAt: string;
 };
 
+type FastLink = {
+  _id: string;
+  label: string;
+  url: string;
+  createdAt: string;
+};
+
 export default function Home() {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
   const [animationDone, setAnimationDone] = useState(false);
   const [prefetchedNotes, setPrefetchedNotes] = useState<Note[] | null>(null);
   const [prefetchedCep, setPrefetchedCep] = useState<string | null>(null);
+  const [prefetchedLinks, setPrefetchedLinks] = useState<FastLink[] | null>(null);
   const dataFetchedRef = useRef(false);
 
   const sessionReady = status !== "loading";
   const isLoggedIn = !!session?.user;
 
-  // Prefetch das notas e CEP durante o loading
+  // Prefetch das notas, CEP e links durante o loading
   useEffect(() => {
     if (sessionReady && isLoggedIn && !dataFetchedRef.current) {
       dataFetchedRef.current = true;
@@ -48,6 +56,11 @@ export default function Home() {
         .then((res) => (res.ok ? res.json() : { cep: null }))
         .then((data) => setPrefetchedCep(data.cep))
         .catch(() => setPrefetchedCep(null));
+
+      fetch("/api/fast-links")
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => setPrefetchedLinks(data))
+        .catch(() => setPrefetchedLinks([]));
     }
   }, [sessionReady, isLoggedIn]);
 
@@ -411,7 +424,7 @@ export default function Home() {
       {activePanel === "kanban" && <KanbanBoard onClose={() => setActivePanel(null)} />}
       {activePanel === "notes" && <NotesBlock onClose={() => setActivePanel(null)} initialNotes={prefetchedNotes} onNotesChange={setPrefetchedNotes} />}
       {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} initialCep={prefetchedCep} onCepChange={setPrefetchedCep} />}
-      {activePanel === "links" && <QuickLinks onClose={() => setActivePanel(null)} />}
+      {activePanel === "links" && <QuickLinks onClose={() => setActivePanel(null)} initialLinks={prefetchedLinks} onLinksChange={setPrefetchedLinks} />}
       {activePanel === "urlshort" && <UrlShortener onClose={() => setActivePanel(null)} />}
       {activePanel === "calc" && <CalculatorBlock onClose={() => setActivePanel(null)} />}
       {activePanel === "feed" && <TechFeed onClose={() => setActivePanel(null)} />}

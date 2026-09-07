@@ -1,23 +1,20 @@
 "use client";
 
-import { X, Plus, Trash2, Pencil, Check, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { X, Plus, Trash2, Pencil, Check, ExternalLink, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 
-const STORAGE_KEY = "lofi-room:quick-links";
-
-type Link = {
-  id: string;
+export type FastLink = {
+  _id: string;
   label: string;
   url: string;
+  createdAt: string;
 };
 
 type Props = {
   onClose: () => void;
+  initialLinks?: FastLink[] | null;
+  onLinksChange?: (links: FastLink[]) => void;
 };
-
-function uid() {
-  return Math.random().toString(36).slice(2, 9);
-}
 
 function normalizeUrl(url: string): string {
   if (!url.startsWith("http://") && !url.startsWith("https://")) {
@@ -39,8 +36,9 @@ function getFaviconUrl(url: string): string {
   return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
 }
 
-export default function QuickLinks({ onClose }: Props) {
-  const [links, setLinks] = useState<Link[]>([]);
+export default function QuickLinks({ onClose, initialLinks, onLinksChange }: Props) {
+  const [links, setLinks] = useState<FastLink[]>(initialLinks ?? []);
+  const [loading, setLoading] = useState(!initialLinks);
   const [adding, setAdding] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [newUrl, setNewUrl] = useState("");
@@ -48,18 +46,30 @@ export default function QuickLinks({ onClose }: Props) {
   const [editLabel, setEditLabel] = useState("");
   const [editUrl, setEditUrl] = useState("");
 
-  // Load from localStorage
+  // Sincronizar links com o componente pai
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setLinks(JSON.parse(saved));
-    } catch {}
-  }, []);
+    onLinksChange?.(links);
+  }, [links, onLinksChange]);
 
-  // Persist to localStorage
+  // Carregar links do banco apenas se não foram pré-carregados
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
-  }, [links]);
+    if (initialLinks) return;
+
+    async function fetchLinks() {
+      try {
+        const res = await fetch("/api/fast-links");
+        if (res.ok) {
+          const data = await res.json();
+          setLinks(data);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar links:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchLinks();
+  }, [initialLinks]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -69,33 +79,67 @@ export default function QuickLinks({ onClose }: Props) {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  function addLink() {
+  async function addLink() {
     const url = newUrl.trim();
     const label = newLabel.trim() || getDomain(url);
     if (!url) return;
-    setLinks((prev) => [...prev, { id: uid(), label, url }]);
+
+    try {
+      const res = await fetch("/api/fast-links", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label, url }),
+      });
+      if (res.ok) {
+        const link = await res.json();
+        setLinks((prev) => [...prev, link]);
+      }
+    } catch (err) {
+      console.error("Erro ao criar link:", err);
+    }
+
     setNewLabel("");
     setNewUrl("");
     setAdding(false);
   }
 
-  function deleteLink(id: string) {
-    setLinks((prev) => prev.filter((l) => l.id !== id));
+  async function deleteLink(id: string) {
+    try {
+      await fetch("/api/fast-links", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      setLinks((prev) => prev.filter((l) => l._id !== id));
+    } catch (err) {
+      console.error("Erro ao deletar link:", err);
+    }
   }
 
-  function startEdit(link: Link) {
-    setEditingId(link.id);
+  function startEdit(link: FastLink) {
+    setEditingId(link._id);
     setEditLabel(link.label);
     setEditUrl(link.url);
   }
 
-  function saveEdit() {
+  async function saveEdit() {
     if (!editingId) return;
     const url = editUrl.trim();
     const label = editLabel.trim() || getDomain(url);
     if (!url) return;
-    setLinks((prev) => prev.map((l) => l.id === editingId ? { ...l, label, url } : l));
+
+    setLinks((prev) => prev.map((l) => l._id === editingId ? { ...l, label, url } : l));
     setEditingId(null);
+
+    try {
+      await fetch("/api/fast-links", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingId, label, url }),
+      });
+    } catch (err) {
+      console.error("Erro ao atualizar link:", err);
+    }
   }
 
   return (
@@ -140,20 +184,24 @@ export default function QuickLinks({ onClose }: Props) {
 
         {/* Links list */}
         <div className="links-scroll flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-2">
-          {links.length === 0 && !adding && (
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={18} className="text-white/30 animate-spin" />
+            </div>
+          ) : links.length === 0 && !adding ? (
             <p className="text-white/25 text-xs text-center py-8">Nenhum link salvo ainda</p>
-          )}
+          ) : null}
 
-          {links.map((link) => (
+          {!loading && links.map((link) => (
             <div
-              key={link.id}
+              key={link._id}
               className="link-item group flex items-center gap-3 px-3 py-2.5 rounded-xl"
               style={{
                 background: "rgba(255,255,255,0.05)",
                 border: "1px solid rgba(255,255,255,0.08)",
               }}
             >
-              {editingId === link.id ? (
+              {editingId === link._id ? (
                 <div className="flex flex-col gap-2 flex-1">
                   <input
                     autoFocus
@@ -210,7 +258,7 @@ export default function QuickLinks({ onClose }: Props) {
                     <button onClick={() => startEdit(link)} className="text-white/35 hover:text-white cursor-pointer transition-colors">
                       <Pencil size={14} />
                     </button>
-                    <button onClick={() => deleteLink(link.id)} className="text-white/35 hover:text-red-400 cursor-pointer transition-colors">
+                    <button onClick={() => deleteLink(link._id)} className="text-white/35 hover:text-red-400 cursor-pointer transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
