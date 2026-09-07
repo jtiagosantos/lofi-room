@@ -1,29 +1,32 @@
 "use client";
 
-import { X, Plus, Trash2, Pencil, Check, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { X, Plus, Trash2, Pencil, Check, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
-type Task = {
-  id: string;
+export type BoardTask = {
+  _id: string;
   content: string;
 };
 
-type Column = {
-  id: string;
+export type BoardColumn = {
+  _id: string;
   title: string;
-  tasks: Task[];
+  tasks: BoardTask[];
 };
 
 type Props = {
   onClose: () => void;
+  initialBoard?: BoardColumn[] | null;
+  onBoardChange?: (columns: BoardColumn[]) => void;
 };
 
 function uid() {
-  return Math.random().toString(36).slice(2, 9);
+  return Math.random().toString(36).slice(2, 12);
 }
 
-export default function KanbanBoard({ onClose }: Props) {
-  const [columns, setColumns] = useState<Column[]>([]);
+export default function KanbanBoard({ onClose, initialBoard, onBoardChange }: Props) {
+  const [columns, setColumns] = useState<BoardColumn[]>(initialBoard ?? []);
+  const [loading, setLoading] = useState(!initialBoard);
 
   // Column creation
   const [addingColumn, setAddingColumn] = useState(false);
@@ -45,6 +48,53 @@ export default function KanbanBoard({ onClose }: Props) {
   const dragging = useRef<{ colId: string; taskId: string } | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sincronizar board com o componente pai
+  useEffect(() => {
+    onBoardChange?.(columns);
+  }, [columns, onBoardChange]);
+
+  // Carregar board do banco apenas se não foi pré-carregado
+  useEffect(() => {
+    if (initialBoard) return;
+
+    async function fetchBoard() {
+      try {
+        const res = await fetch("/api/tasks-board");
+        if (res.ok) {
+          const data = await res.json();
+          setColumns(data.columns);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar board:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBoard();
+  }, [initialBoard]);
+
+  // Salvar board no banco com debounce
+  const saveBoard = useCallback((updatedColumns: BoardColumn[]) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      fetch("/api/tasks-board", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ columns: updatedColumns }),
+      }).catch((err) => console.error("Erro ao salvar board:", err));
+    }, 500);
+  }, []);
+
+  // Helper: atualizar columns e salvar
+  function updateColumns(updater: (cols: BoardColumn[]) => BoardColumn[]) {
+    setColumns((prev) => {
+      const updated = updater(prev);
+      saveBoard(updated);
+      return updated;
+    });
+  }
 
   // Close on Escape
   useEffect(() => {
@@ -59,7 +109,7 @@ export default function KanbanBoard({ onClose }: Props) {
   function addColumn() {
     const title = newColumnTitle.trim();
     if (!title) return;
-    setColumns((cols) => [...cols, { id: uid(), title, tasks: [] }]);
+    updateColumns((cols) => [...cols, { _id: uid(), title, tasks: [] }]);
     setNewColumnTitle("");
     setAddingColumn(false);
     setTimeout(() => {
@@ -68,18 +118,18 @@ export default function KanbanBoard({ onClose }: Props) {
   }
 
   function deleteColumn(colId: string) {
-    setColumns((cols) => cols.filter((c) => c.id !== colId));
+    updateColumns((cols) => cols.filter((c) => c._id !== colId));
   }
 
-  function startEditColumn(col: Column) {
-    setEditingColumnId(col.id);
+  function startEditColumn(col: BoardColumn) {
+    setEditingColumnId(col._id);
     setEditingColumnTitle(col.title);
   }
 
   function saveEditColumn(colId: string) {
     const title = editingColumnTitle.trim();
     if (!title) return;
-    setColumns((cols) => cols.map((c) => (c.id === colId ? { ...c, title } : c)));
+    updateColumns((cols) => cols.map((c) => (c._id === colId ? { ...c, title } : c)));
     setEditingColumnId(null);
   }
 
@@ -87,9 +137,9 @@ export default function KanbanBoard({ onClose }: Props) {
   function addTask(colId: string) {
     const content = newTaskContent.trim();
     if (!content) return;
-    setColumns((cols) =>
+    updateColumns((cols) =>
       cols.map((c) =>
-        c.id === colId ? { ...c, tasks: [...c.tasks, { id: uid(), content }] } : c
+        c._id === colId ? { ...c, tasks: [...c.tasks, { _id: uid(), content }] } : c
       )
     );
     setNewTaskContent("");
@@ -97,15 +147,15 @@ export default function KanbanBoard({ onClose }: Props) {
   }
 
   function deleteTask(colId: string, taskId: string) {
-    setColumns((cols) =>
+    updateColumns((cols) =>
       cols.map((c) =>
-        c.id === colId ? { ...c, tasks: c.tasks.filter((t) => t.id !== taskId) } : c
+        c._id === colId ? { ...c, tasks: c.tasks.filter((t) => t._id !== taskId) } : c
       )
     );
   }
 
-  function startEditTask(colId: string, task: Task) {
-    setEditingTask({ colId, taskId: task.id });
+  function startEditTask(colId: string, task: BoardTask) {
+    setEditingTask({ colId, taskId: task._id });
     setEditingTaskContent(task.content);
   }
 
@@ -113,13 +163,13 @@ export default function KanbanBoard({ onClose }: Props) {
     if (!editingTask) return;
     const content = editingTaskContent.trim();
     if (!content) return;
-    setColumns((cols) =>
+    updateColumns((cols) =>
       cols.map((c) =>
-        c.id === editingTask.colId
+        c._id === editingTask.colId
           ? {
               ...c,
               tasks: c.tasks.map((t) =>
-                t.id === editingTask.taskId ? { ...t, content } : t
+                t._id === editingTask.taskId ? { ...t, content } : t
               ),
             }
           : c
@@ -138,12 +188,12 @@ export default function KanbanBoard({ onClose }: Props) {
     const { colId: srcColId, taskId } = dragging.current;
     if (srcColId === targetColId) return;
 
-    setColumns((cols) => {
-      const task = cols.find((c) => c.id === srcColId)?.tasks.find((t) => t.id === taskId);
+    updateColumns((cols) => {
+      const task = cols.find((c) => c._id === srcColId)?.tasks.find((t) => t._id === taskId);
       if (!task) return cols;
       return cols.map((c) => {
-        if (c.id === srcColId) return { ...c, tasks: c.tasks.filter((t) => t.id !== taskId) };
-        if (c.id === targetColId) return { ...c, tasks: [...c.tasks, task] };
+        if (c._id === srcColId) return { ...c, tasks: c.tasks.filter((t) => t._id !== taskId) };
+        if (c._id === targetColId) return { ...c, tasks: [...c.tasks, task] };
         return c;
       });
     });
@@ -191,6 +241,11 @@ export default function KanbanBoard({ onClose }: Props) {
         </div>
 
         {/* Columns */}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 size={18} className="text-white/30 animate-spin" />
+          </div>
+        ) : (
         <div
           ref={scrollRef}
           className="board-scroll flex gap-3 overflow-x-auto p-4 flex-1"
@@ -199,7 +254,7 @@ export default function KanbanBoard({ onClose }: Props) {
         >
           {columns.map((col) => (
             <div
-              key={col.id}
+              key={col._id}
               className="flex flex-col flex-shrink-0 rounded-2xl"
               style={{
                 width: 240,
@@ -207,11 +262,11 @@ export default function KanbanBoard({ onClose }: Props) {
                 border: "1px solid rgba(255,255,255,0.08)",
               }}
               onDragOver={(e) => e.preventDefault()}
-              onDrop={() => onDropColumn(col.id)}
+              onDrop={() => onDropColumn(col._id)}
             >
               {/* Column header */}
               <div className="flex items-center gap-1 px-3 pt-3 pb-2 flex-shrink-0">
-                {editingColumnId === col.id ? (
+                {editingColumnId === col._id ? (
                   <div className="flex items-center gap-1 flex-1">
                     <input
                       autoFocus
@@ -219,12 +274,12 @@ export default function KanbanBoard({ onClose }: Props) {
                       value={editingColumnTitle}
                       onChange={(e) => setEditingColumnTitle(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") saveEditColumn(col.id);
+                        if (e.key === "Enter") saveEditColumn(col._id);
                         if (e.key === "Escape") setEditingColumnId(null);
                       }}
                     />
                     <button
-                      onClick={() => saveEditColumn(col.id)}
+                      onClick={() => saveEditColumn(col._id)}
                       className="text-white/50 hover:text-white cursor-pointer"
                     >
                       <Check size={16} />
@@ -242,7 +297,7 @@ export default function KanbanBoard({ onClose }: Props) {
                       <Pencil size={15} />
                     </button>
                     <button
-                      onClick={() => deleteColumn(col.id)}
+                      onClick={() => deleteColumn(col._id)}
                       className="text-white/30 hover:text-red-400 cursor-pointer p-0.5"
                     >
                       <Trash2 size={15} />
@@ -255,16 +310,16 @@ export default function KanbanBoard({ onClose }: Props) {
               <div className="col-scroll flex flex-col gap-2 px-3 overflow-y-auto" style={{ maxHeight: 340 }}>
                 {col.tasks.map((task) => (
                   <div
-                    key={task.id}
+                    key={task._id}
                     draggable
-                    onDragStart={() => onDragStart(col.id, task.id)}
+                    onDragStart={() => onDragStart(col._id, task._id)}
                     className="task-card group relative rounded-xl px-3 py-2.5 cursor-move"
                     style={{
                       background: "rgba(255,255,255,0.07)",
                       border: "1px solid rgba(255,255,255,0.08)",
                     }}
                   >
-                    {editingTask?.colId === col.id && editingTask?.taskId === task.id ? (
+                    {editingTask?.colId === col._id && editingTask?.taskId === task._id ? (
                       <div className="flex flex-col gap-1.5">
                         <textarea
                           autoFocus
@@ -294,13 +349,13 @@ export default function KanbanBoard({ onClose }: Props) {
                         <p className="text-white/80 text-xs leading-relaxed break-words w-full pr-14">{task.content}</p>
                         <div className="task-actions opacity-0 transition-opacity absolute top-2 right-2 flex gap-1.5">
                           <button
-                            onClick={() => startEditTask(col.id, task)}
+                            onClick={() => startEditTask(col._id, task)}
                             className="text-white/40 hover:text-white cursor-pointer"
                           >
                             <Pencil size={17} />
                           </button>
                           <button
-                            onClick={() => deleteTask(col.id, task.id)}
+                            onClick={() => deleteTask(col._id, task._id)}
                             className="text-white/40 hover:text-red-400 cursor-pointer"
                           >
                             <Trash2 size={17} />
@@ -314,7 +369,7 @@ export default function KanbanBoard({ onClose }: Props) {
 
               {/* Add task */}
               <div className="px-3 py-2.5 flex-shrink-0">
-                {addingTaskInColumn === col.id ? (
+                {addingTaskInColumn === col._id ? (
                   <div className="flex flex-col gap-1.5">
                     <textarea
                       autoFocus
@@ -330,7 +385,7 @@ export default function KanbanBoard({ onClose }: Props) {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
-                          addTask(col.id);
+                          addTask(col._id);
                         }
                         if (e.key === "Escape") {
                           setAddingTaskInColumn(null);
@@ -340,7 +395,7 @@ export default function KanbanBoard({ onClose }: Props) {
                     />
                     <div className="flex gap-1.5">
                       <button
-                        onClick={() => addTask(col.id)}
+                        onClick={() => addTask(col._id)}
                         className="flex-1 py-1 rounded-lg text-xs text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                         style={{ border: "1px solid rgba(255,255,255,0.1)" }}
                       >
@@ -356,7 +411,7 @@ export default function KanbanBoard({ onClose }: Props) {
                   </div>
                 ) : (
                   <button
-                    onClick={() => { setAddingTaskInColumn(col.id); setNewTaskContent(""); }}
+                    onClick={() => { setAddingTaskInColumn(col._id); setNewTaskContent(""); }}
                     className="flex items-center gap-1.5 text-white/30 hover:text-white/70 text-xs transition-colors cursor-pointer w-full"
                   >
                     <Plus size={16} />
@@ -416,6 +471,7 @@ export default function KanbanBoard({ onClose }: Props) {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

@@ -30,6 +30,17 @@ type FastLink = {
   createdAt: string;
 };
 
+type BoardTask = {
+  _id: string;
+  content: string;
+};
+
+type BoardColumn = {
+  _id: string;
+  title: string;
+  tasks: BoardTask[];
+};
+
 export default function Home() {
   const { data: session, status } = useSession();
   const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +48,7 @@ export default function Home() {
   const [prefetchedNotes, setPrefetchedNotes] = useState<Note[] | null>(null);
   const [prefetchedCep, setPrefetchedCep] = useState<string | null>(null);
   const [prefetchedLinks, setPrefetchedLinks] = useState<FastLink[] | null>(null);
+  const [prefetchedBoard, setPrefetchedBoard] = useState<BoardColumn[] | null>(null);
   const dataFetchedRef = useRef(false);
 
   const sessionReady = status !== "loading";
@@ -61,6 +73,11 @@ export default function Home() {
         .then((res) => (res.ok ? res.json() : []))
         .then((data) => setPrefetchedLinks(data))
         .catch(() => setPrefetchedLinks([]));
+
+      fetch("/api/tasks-board")
+        .then((res) => (res.ok ? res.json() : { columns: [] }))
+        .then((data) => setPrefetchedBoard(data.columns))
+        .catch(() => setPrefetchedBoard([]));
     }
   }, [sessionReady, isLoggedIn]);
 
@@ -421,7 +438,7 @@ export default function Home() {
       </aside>
 
       {activePanel === "clock" && <ClockBlock />}
-      {activePanel === "kanban" && <KanbanBoard onClose={() => setActivePanel(null)} />}
+      {activePanel === "kanban" && <KanbanBoard onClose={() => setActivePanel(null)} initialBoard={prefetchedBoard} onBoardChange={setPrefetchedBoard} />}
       {activePanel === "notes" && <NotesBlock onClose={() => setActivePanel(null)} initialNotes={prefetchedNotes} onNotesChange={setPrefetchedNotes} />}
       {activePanel === "weather" && <WeatherBlock onClose={() => setActivePanel(null)} initialCep={prefetchedCep} onCepChange={setPrefetchedCep} />}
       {activePanel === "links" && <QuickLinks onClose={() => setActivePanel(null)} initialLinks={prefetchedLinks} onLinksChange={setPrefetchedLinks} />}
