@@ -1,6 +1,6 @@
 "use client";
 
-import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link, Scissors, Calculator as CalculatorIcon, Newspaper, UserCircle } from "lucide-react";
+import { Maximize, Minimize, FolderKanban, NotebookPen, Thermometer, Clock, AlarmClockOff, Link, Scissors, Calculator as CalculatorIcon, Newspaper, CircleUserRound, Wallpaper } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import KanbanBoard from "./components/KanbanBoard";
@@ -15,6 +15,7 @@ import TechFeed from "./components/TechFeed";
 import LoginScreen from "./components/LoginScreen";
 import UserProfile from "./components/UserProfile";
 import LoadingScreen from "./components/LoadingScreen";
+import WallpaperPicker from "./components/WallpaperPicker";
 
 type Note = {
   _id: string;
@@ -78,6 +79,13 @@ export default function Home() {
         .then((res) => (res.ok ? res.json() : { columns: [] }))
         .then((data) => setPrefetchedBoard(data.columns))
         .catch(() => setPrefetchedBoard([]));
+
+      fetch("/api/wallpapers")
+        .then((res) => (res.ok ? res.json() : { url: null }))
+        .then((data) => {
+          if (data.url) setWallpaperUrl(data.url);
+        })
+        .catch(() => {});
     }
   }, [sessionReady, isLoggedIn]);
 
@@ -94,7 +102,9 @@ export default function Home() {
   const [showTooltip, setShowTooltip] = useState(false);
   const [showKanbanTooltip, setShowKanbanTooltip] = useState(false);
   const [showNotesTooltip, setShowNotesTooltip] = useState(false);
-  const [activePanel, setActivePanel] = useState<"clock" | "kanban" | "notes" | "weather" | "links" | "urlshort" | "calc" | "feed" | "profile" | null>(null);
+  const [activePanel, setActivePanel] = useState<"clock" | "kanban" | "notes" | "weather" | "links" | "urlshort" | "calc" | "feed" | "profile" | "wallpaper" | null>(null);
+  const [wallpaperUrl, setWallpaperUrl] = useState("/lofi-room-cover.png");
+  const [showWallpaperTooltip, setShowWallpaperTooltip] = useState(false);
   const [showUrlShortTooltip, setShowUrlShortTooltip] = useState(false);
   const [showCalcTooltip, setShowCalcTooltip] = useState(false);
   const [showFeedTooltip, setShowFeedTooltip] = useState(false);
@@ -148,7 +158,10 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-black" style={{ backgroundImage: "url('/lofi-room-cover.png')", backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
+    <div className="relative min-h-screen w-full bg-black" style={{ backgroundImage: `url('${wallpaperUrl}')`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }}>
+      {/* Overlay escurecido */}
+      <div className="fixed inset-0 bg-black/30 z-0" />
+
       {/* Title - canto superior esquerdo */}
       <div className="fixed top-4 left-4 z-50">
         <h1 className="text-white" style={{ fontFamily: "var(--font-pacifico)", fontSize: "28px" }}>
@@ -168,8 +181,34 @@ export default function Home() {
             boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
           }}
         >
-          {/* Left column - URL Shortener at bottom */}
+          {/* Left column - Wallpaper + URL Shortener */}
           <div className="flex flex-col items-center justify-end gap-1">
+            {/* Wallpaper button */}
+            <div className="relative">
+              <button
+                onClick={() => openPanel("wallpaper")}
+                onMouseEnter={() => setShowWallpaperTooltip(true)}
+                onMouseLeave={() => setShowWallpaperTooltip(false)}
+                className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+              >
+                <Wallpaper size={19} />
+              </button>
+
+              {showWallpaperTooltip && (
+                <div
+                  className="tooltip-animate absolute right-full top-1/2 mr-3 px-2.5 py-1.5 rounded-lg text-xs text-white whitespace-nowrap pointer-events-none"
+                  style={{
+                    background: "rgba(30, 30, 30, 0.95)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.4)",
+                  }}
+                >
+                  Imagem de fundo
+                </div>
+              )}
+            </div>
+
+            {/* URL Shortener button */}
             <div className="relative">
               <button
                 onClick={() => openPanel("urlshort")}
@@ -397,6 +436,8 @@ export default function Home() {
                 Calculadora
               </div>
             )}
+          </div>
+
           {/* User profile button */}
           {isLoggedIn && (
             <div className="relative">
@@ -406,16 +447,7 @@ export default function Home() {
                 onMouseLeave={() => setShowProfileTooltip(false)}
                 className="flex items-center justify-center w-9 h-9 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors duration-200 cursor-pointer overflow-hidden"
               >
-                {session?.user?.image ? (
-                  <img
-                    src={session.user.image}
-                    alt=""
-                    className="w-6 h-6 rounded-full"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <UserCircle size={19} />
-                )}
+                <CircleUserRound size={19} />
               </button>
 
               {showProfileTooltip && (
@@ -433,7 +465,6 @@ export default function Home() {
             </div>
           )}
           </div>
-          </div>
         </div>
       </aside>
 
@@ -446,6 +477,7 @@ export default function Home() {
       {activePanel === "calc" && <CalculatorBlock onClose={() => setActivePanel(null)} />}
       {activePanel === "feed" && <TechFeed onClose={() => setActivePanel(null)} />}
       {activePanel === "profile" && <UserProfile onClose={() => setActivePanel(null)} />}
+      {activePanel === "wallpaper" && <WallpaperPicker onClose={() => setActivePanel(null)} currentWallpaper={wallpaperUrl} onWallpaperChange={setWallpaperUrl} />}
       {showLogin && <LoginScreen onClose={() => setShowLogin(false)} />}
       <MusicPlayer />
       {isLoading && <LoadingScreen onFinish={handleLoadingFinish} />}
